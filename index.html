@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Angular Signals</title>
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!-- Slide 1: Title -->
+        <section>
+          <h1>Angular Signals</h1>
+          <p><small>By: Juan Munoz Escobar</small></p>
+        </section>
+        <!-- Slide 2: The Problem -->
+        <section>
+          <h2>The Problem</h2>
+          <ul>
+            <li>Angular relied on Zone.js to detect when state changed</li>
+            <li>Zone.js watches everything clicks, timers, HTTP calls</li>
+            <li>Any event triggered a check of the entire component tree</li>
+            <li>Works fine for small apps gets expensive at scale</li>
+          </ul>
+          <br />
+        </section>
+
+        <!-- Slide 3: What is a Signal -->
+        <section>
+          <h2>What is a Signal?</h2>
+          <p>
+            A reactive value that Angular can track precisely only what depends
+            on it updates.
+          </p>
+          <ul>
+            <li>
+              <code>signal()</code> creates a reactive value Angular can watch
+            </li>
+            <li>
+              <code>computed()</code> derives a value from signals, auto-updates
+              when dependencies change
+            </li>
+            <li>
+              <code>effect()</code> runs side-effect code whenever a signal it
+              reads changes
+            </li>
+          </ul>
+          <br />
+        </section>
+
+        <!-- Slide 4: signal() -->
+        <section>
+          <h2>signal()</h2>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              text-align: left;
+            "
+          >
+            <div>
+              <p><small>Before plain variable</small></p>
+              <pre><code class="language-typescript">export class CounterComponent {
+  count = 0;
+
+  increment() {
+    this.count++;
+  }
+}</code></pre>
+            </div>
+            <div>
+              <p><small>After signal</small></p>
+              <pre><code class="language-typescript">export class CounterComponent {
+  count = signal(0);
+
+  increment() {
+    this.count.update(v => v + 1);
+  }
+}</code></pre>
+            </div>
+          </div>
+          <p>
+            <small
+              >In templates, call the signal like a function:
+              <code>{{ count() }}</code></small
+            >
+          </p>
+        </section>
+
+        <!-- Slide 5: computed() -->
+        <section>
+          <h2>computed()</h2>
+          <pre><code class="language-typescript">export class CartComponent {
+  price    = signal(29.99);
+  quantity = signal(3);
+
+  total = computed(() => this.price() * this.quantity());
+}</code></pre>
+          <ul>
+            <li>
+              <code>total</code> is read-only meaning you cannot set it directly
+            </li>
+            <li>
+              Angular only recomputes it when a dependency actually changes
+            </li>
+            <li>
+              No manual <code>ngOnChanges</code> or subscription logic needed
+            </li>
+          </ul>
+        </section>
+
+        <!-- Slide 6: effect() -->
+        <section>
+          <h2>effect()</h2>
+          <p>Used for side effects that depend on signals</p>
+          <pre><code class="language-typescript">export class ThemeComponent {
+  darkMode = signal(false);
+
+  constructor() {
+    effect(() => {
+      localStorage.setItem('theme', this.darkMode() ? 'dark' : 'light');
+    });
+  }
+}</code></pre>
+          <ul>
+            <li>
+              Good for logging, syncing to <code>localStorage</code>, analytics
+            </li>
+            <li>Automatically cleans up when the component is destroyed</li>
+          </ul>
+        </section>
+
+        <!-- Slide 7: set() vs update() -->
+        <section>
+          <h2>Updating Signals set() vs update()</h2>
+          <pre><code class="language-typescript">name = signal('John');
+
+
+this.name.set('Jane');             
+
+
+this.name.update(n => n + ' Doe');</code></pre>
+          <ul>
+            <li>
+              <code>set(value)</code> use when you already have the new value
+              ready
+            </li>
+            <li>
+              <code>update(fn)</code> use for increments, toggles, or transforms
+            </li>
+          </ul>
+        </section>
+
+        <!-- Slide 8: Why It Matters -->
+        <section>
+          <h2>Why It Matters</h2>
+          <ul>
+            <li>
+              Only the components that changed get re-rendered, not the entire
+              tree
+            </li>
+            <li>State changes are explicit and easy to follow</li>
+            <li>Less reliance on RxJS for simple state management</li>
+          </ul>
+        </section>
+
+        <!-- Slide 9: Summary -->
+        <section>
+          <h2>Summary</h2>
+          <p>
+            Using Signals, Angular knows exactly what changed and only updates
+            that.
+          </p>
+          <br />
+          <p>
+            <code
+              >signal()&nbsp;&nbsp;&nbsp;computed()&nbsp;&nbsp;&nbsp;effect()</code
+            >
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        transition: "none",
+        backgroundTransition: "none",
+      });
+    </script>
+  </body>
+</html>
